@@ -20,7 +20,7 @@ bridge = CvBridge()
 def imgCallBack(msg):
     global img
     img = msg
-    frame = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough') 
+    cv_image = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough') 
     print("ok")
     main3.main3(cv_image)
 
