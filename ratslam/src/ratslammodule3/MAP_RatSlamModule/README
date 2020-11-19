@@ -1,0 +1,40 @@
+
+Descrição do algortimo e funcionalidades:
+
+O algoritmo foi modificado em 2 partes:
+
+1 - original: chamada da função ratslam na __main__
+    modificado: o ratslam agora possui uma definição para ser
+                chamado a qualquer momento.
+
+2 - original: as funções save() e load() não mantinham a informação do
+              último ponto salvo em um mapa. Quando um mapa era salvo por save()
+              e a função load() era chamada, o novo mapa não iniciava do ponto
+              anteirior do mapeamento passado nos pontos (x,y,th) experience_map
+    modificado: as funções guardam a informação do último ponto salvo no mapa
+                de experiências e continua o mapeamento deste ponto.
+
+
+
+INICIALIZAÇÃO:
+
+    - Para rodar o ratslam, instale o python-opencv no python 2.7
+    - Abra o terminal e digite o comando na pasta do RatSLAM:
+
+        'python main.py'
+
+PARA NAVEGAÇÃO NO RatSLAM
+
+     Se desejável, pode-se iniciar o algoritmo apenas para "navegação" em um
+     mapa PREVIAMENTE SALVO. Para isto, vá no arquivo:
+          posecellnetwork.py -> def get_action()
+     e substitua todos os CREATE_NODE por SET_NODE. Depois, carregue o
+     mapa com o def load() em uma rede RatSLAM e rode o algoritmo. Deste modo,
+     o mapa de experiências irá apenas mostrar por onde o robô está passando
+     dentro de um mapa já salvo.
+
+
+Esta pasta possui 4 vídeos do laboratório na pasta edicao, sendo que cada video
+contém uma descrição se são voltas pela direita ou pela esquerda. Se a volta for
+pela direita, copie os dados que estão no arquivo param_direita em _globals.py.
+Faça o mesmo processo com o arquivo param_esquerda caso o video seja *left*.
