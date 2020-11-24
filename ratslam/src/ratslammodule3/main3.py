@@ -256,7 +256,5 @@ def main3(frame):
             x, y, theta = exp[-1].x_m, exp[-1].y_m, exp[-1].th_rad 
             print x,y,theta
             '''
-            break
-            
 
     # slam.save()
