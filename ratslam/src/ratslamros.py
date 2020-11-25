@@ -19,24 +19,13 @@ img = Image()
 bridge = CvBridge()
 frame = None
 
-# def timerCallBack(event):
-#     frame = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough')
-#     print("ok")
-#     main3.main3(frame)
-
 def img_callback(msg):
     global img
     global frame
     img = msg
     frame = bridge.imgmsg_to_cv2(img, desired_encoding='passthrough')
-    print("ok")
-
 
 sub = rp.Subscriber('/camera/rgb/image_raw', Image, img_callback)
-
-# timer = rp.Timer(rp.Duration(0.05), timerCallBack)
-
-
 
 cv2.waitKey(1000)
 slam = ratslam3.Ratslam()
