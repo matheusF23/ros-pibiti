@@ -16,56 +16,62 @@ quat = [0,0,0,0]
 pub = None
 sub = None
 timer = None
-fi = 0 # angulo da frente do robo
+angulo_robo = 0
 sensores = []
+x_alvo = 3
+y_alvo = 8
+x_robo = 0
+y_robo = 0
  
 
 def timerCallBack(event):
-    if center > 1.0:
-        vel.linear.x = 0.5
-        if right > 0.5:
-            vel.angular.z = -0.2
-        else:
-            vel.angular.z = 0.2
+    velocidade_angular = desvia_obstaculo() + alcanca_alvo()
+
+    if abs(x_robo - x_alvo) <= 1 and abs(y_robo-y_alvo) <= 1:
+        vel.linear.x = 0.0
+        vel.angular.z = 0.0
     else:
-        vel.linear.x = 0
-        if left > right:
-           vel.angular.z = 0.2
-        else:
-            vel.angular.z = -0.2
-    velocidade_angular = desvia_obstaculo()
-    # pub.publish(vel)
+        vel.linear.x = 0.5
+        vel.angular.z = velocidade_angular
+    pub.publish(vel)
+
+def alcanca_alvo():
+    """Retorna a contribuicao do atrator."""
+    global angulo_robo
+    angulo_alvo = math.atan((y_alvo-y_robo)/(x_alvo - x_robo))
+    magnitude_forca_atracao = 10
+    contribuicao_alvo = -magnitude_forca_atracao*math.sin(angulo_robo - angulo_alvo)
+    return contribuicao_alvo
 
 def desvia_obstaculo():
     """Retorna a contribuicao do repulsor."""
-    global fi, sensores
-    beta1 = 8
+    global angulo_robo, sensores
+    beta1 = 0.05
     beta2 = 20
     angulo_entre_sensores = 0.00576969701797
-    velocidade_angular = 0
+    contribuicao_obstaculo = 0
     for sensor, distancia in enumerate(sensores):
         angulo_sensor = (sensor - 363)*angulo_entre_sensores
-        psi = fi - angulo_sensor    # angulo do obstaculo
-        velocidade_angular += beta1*math.exp(-distancia/beta2)*(fi-psi)*math.exp((-(fi-psi)**2)/2)
-    return velocidade_angular
+        angulo_obstaculo = angulo_robo - angulo_sensor
+        contribuicao_obstaculo += beta1*math.exp(-distancia/beta2)*(angulo_robo-angulo_obstaculo)*math.exp((-(angulo_robo-angulo_obstaculo)**2)/2)
+    return contribuicao_obstaculo
 
 def scanCallBack(msg):
-    global sensores, center, left, right
-    center = min(msg.ranges[333:393])
-    left = min(msg.ranges[500:560])
-    right = min(msg.ranges[170:230])
+    global sensores
     sensores = msg.ranges
 
-def fiCallBack(msg):
-    global quat, fi
+def angulo_roboCallBack(msg):
+    global quat, x_robo, y_robo, angulo_robo
+    x_robo = msg.pose.pose.position.x
+    y_robo = msg.pose.pose.position.y
     quaternion = msg.pose.pose.orientation
     quat = [quaternion.x, quaternion.y, quaternion.z, quaternion.w]
     euler = tf.transformations.euler_from_quaternion(quat)
-    fi = euler[2] # angulo do robo em radianos
+    angulo_robo = euler[2] # angulo do robo em radianos
 
 pub = rp.Publisher('/p3dx/cmd_vel', Twist, queue_size=1)
 sub = rp.Subscriber('/p3dx/laser/scan', LaserScan, scanCallBack)
-sub = rp.Subscriber('/p3dx/odom', Odometry, fiCallBack)
+sub = rp.Subscriber('/p3dx/odom', Odometry, angulo_roboCallBack)
 
 # timer com 0.1s de periodo (10hz)
 timer = rp.Timer(rp.Duration(0.05), timerCallBack)
