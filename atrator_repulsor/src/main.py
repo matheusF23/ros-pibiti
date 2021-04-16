@@ -16,8 +16,9 @@ quat = [0,0,0,0]
 pub = None
 sub = None
 timer = None
-fi = 0 
-
+fi = 0 # angulo da frente do robo
+sensores = []
+ 
 
 def timerCallBack(event):
     if center > 1.0:
@@ -32,31 +33,35 @@ def timerCallBack(event):
            vel.angular.z = 0.2
         else:
             vel.angular.z = -0.2
+    velocidade_angular = desvia_obstaculo()
+    # pub.publish(vel)
 
-    pub.publish(vel)
-
-def desvia_obstaculo(fi, psi, sensores):
-    """Retorna a contribuição do repulsor."""
+def desvia_obstaculo():
+    """Retorna a contribuicao do repulsor."""
+    global fi, sensores
     beta1 = 8
     beta2 = 20
+    angulo_entre_sensores = 0.00576969701797
     velocidade_angular = 0
     for sensor, distancia in enumerate(sensores):
+        angulo_sensor = (sensor - 363)*angulo_entre_sensores
+        psi = fi - angulo_sensor    # angulo do obstaculo
         velocidade_angular += beta1*math.exp(-distancia/beta2)*(fi-psi)*math.exp((-(fi-psi)**2)/2)
+    return velocidade_angular
 
 def scanCallBack(msg):
-    global center, left, right
+    global sensores, center, left, right
     center = min(msg.ranges[333:393])
     left = min(msg.ranges[500:560])
     right = min(msg.ranges[170:230])
-    print(len(msg.ranges))
-    # print(center, right, left)
+    sensores = msg.ranges
 
 def fiCallBack(msg):
     global quat, fi
     quaternion = msg.pose.pose.orientation
     quat = [quaternion.x, quaternion.y, quaternion.z, quaternion.w]
     euler = tf.transformations.euler_from_quaternion(quat)
-    fi = euler[2] # angulo do robô, em radianos
+    fi = euler[2] # angulo do robo em radianos
 
 pub = rp.Publisher('/p3dx/cmd_vel', Twist, queue_size=1)
 sub = rp.Subscriber('/p3dx/laser/scan', LaserScan, scanCallBack)
