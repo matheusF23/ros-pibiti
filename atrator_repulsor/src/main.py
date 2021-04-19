@@ -25,7 +25,8 @@ x_alvo = 9
 y_alvo = 1
 x_robo = 0
 y_robo = 0
- 
+
+print("Iniciando movimentacao")
 
 def timerCallBack(event):
     kstoc = 0.1
@@ -37,6 +38,7 @@ def timerCallBack(event):
     if abs(x_robo - x_alvo) <= 0.25 and abs(y_robo-y_alvo) <= 0.25:
         vel.linear.x = 0.0
         vel.angular.z = 0.0
+        print("Chguei ao destino")
     else:
         vel.linear.x = 0.2
         vel.angular.z = velocidade_angular
