@@ -1,12 +1,13 @@
 #!/usr/bin/env python2
 
+import math
+from random import random
+
 import rospy as rp
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
-
 from nav_msgs.msg import Odometry
 import tf
-import math
 
 rp.init_node('atrator_repulsor')
 
@@ -18,47 +19,62 @@ sub = None
 timer = None
 angulo_robo = 0
 sensores = []
-x_alvo = 3
-y_alvo = 8
+angulos_sensores = [-100, -60, -30, 0, 30, 60, 100]
+raio_robo = 0.25 # metro
+x_alvo = 9
+y_alvo = 1
 x_robo = 0
 y_robo = 0
  
 
 def timerCallBack(event):
-    velocidade_angular = desvia_obstaculo() + alcanca_alvo()
+    kstoc = 0.1
+    forca_repulsiva = desvia_obstaculo()
+    forca_atrativa = alcanca_alvo()
+    forca_estocastica = kstoc*(2*(random()-0.5))
+    velocidade_angular = forca_repulsiva + forca_atrativa + forca_estocastica
 
-    if abs(x_robo - x_alvo) <= 1 and abs(y_robo-y_alvo) <= 1:
+    if abs(x_robo - x_alvo) <= 0.25 and abs(y_robo-y_alvo) <= 0.25:
         vel.linear.x = 0.0
         vel.angular.z = 0.0
     else:
-        vel.linear.x = 0.5
+        vel.linear.x = 0.2
         vel.angular.z = velocidade_angular
+
     pub.publish(vel)
 
 def alcanca_alvo():
     """Retorna a contribuicao do atrator."""
     global angulo_robo
     angulo_alvo = math.atan((y_alvo-y_robo)/(x_alvo - x_robo))
-    magnitude_forca_atracao = 10
+    magnitude_forca_atracao = 1
     contribuicao_alvo = -magnitude_forca_atracao*math.sin(angulo_robo - angulo_alvo)
     return contribuicao_alvo
 
 def desvia_obstaculo():
     """Retorna a contribuicao do repulsor."""
-    global angulo_robo, sensores
-    beta1 = 0.05
+    global angulo_robo, sensores, raio_robo, angulos_sensores
+    beta1 = 8
     beta2 = 20
-    angulo_entre_sensores = 0.00576969701797
+    angulo_entre_sensores = 30*math.pi/180
     contribuicao_obstaculo = 0
     for sensor, distancia in enumerate(sensores):
-        angulo_sensor = (sensor - 363)*angulo_entre_sensores
-        angulo_obstaculo = angulo_robo - angulo_sensor
-        contribuicao_obstaculo += beta1*math.exp(-distancia/beta2)*(angulo_robo-angulo_obstaculo)*math.exp((-(angulo_robo-angulo_obstaculo)**2)/2)
+        angulo_sensor = angulos_sensores[sensor]*math.pi/180
+        angulo_obstaculo = angulo_robo + angulo_sensor
+        faixa_angular_respulsiva = math.atan(math.tan(angulo_entre_sensores/2) + raio_robo/(raio_robo + distancia))
+        contribuicao_obstaculo += beta1*math.exp(-distancia/beta2)*(angulo_robo-angulo_obstaculo)*math.exp((-(angulo_robo-angulo_obstaculo)**2)/(2*faixa_angular_respulsiva**2))
     return contribuicao_obstaculo
 
 def scanCallBack(msg):
     global sensores
-    sensores = msg.ranges
+    sensores = []
+    sensores.append(min(msg.ranges[0:100]))
+    sensores.append(min(msg.ranges[100:200]))
+    sensores.append(min(msg.ranges[200:300]))
+    sensores.append(min(msg.ranges[300:400]))
+    sensores.append(min(msg.ranges[400:500]))
+    sensores.append(min(msg.ranges[500:600]))
+    sensores.append(min(msg.ranges[600:]))
 
 def angulo_roboCallBack(msg):
     global quat, x_robo, y_robo, angulo_robo
