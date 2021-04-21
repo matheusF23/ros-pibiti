@@ -21,8 +21,8 @@ angulo_robo = 0
 sensores = []
 angulos_sensores = [-100, -60, -30, 0, 30, 60, 100]
 raio_robo = 0.25 # metro
-x_alvo = 0.5
-y_alvo = 0.5
+x_alvo = 8.0
+y_alvo = 0.0
 x_robo = 0
 y_robo = 0
 
@@ -47,13 +47,15 @@ def alcanca_alvo():
     """Retorna a contribuicao do atrator."""
     global angulo_robo
     angulo_alvo = math.atan((y_alvo-y_robo)/(x_alvo - x_robo))
-    magnitude_forca_atracao = 1
+    magnitude_forca_atracao = 2.0
     contribuicao_alvo = -magnitude_forca_atracao*math.sin(angulo_robo - angulo_alvo)
     return contribuicao_alvo
 
 def desvia_obstaculo():
     """Retorna a contribuicao do repulsor."""
     global angulo_robo, sensores, raio_robo, angulos_sensores
+    # beta1 = 6.5
+    # beta2 = 16
     beta1 = 8
     beta2 = 20
     angulo_entre_sensores = 30*math.pi/180
