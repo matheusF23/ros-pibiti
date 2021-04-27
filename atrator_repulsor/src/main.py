@@ -9,6 +9,8 @@ from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import Odometry
 import tf
 
+from plot_rota import plot_rota
+
 rp.init_node('atrator_repulsor')
 
 vel = Twist()
@@ -22,12 +24,15 @@ sensores = []
 angulos_sensores = [-100, -60, -30, 0, 30, 60, 100]
 raio_robo = 0.25 # metro
 x_alvo = 8.0
-y_alvo = 0.0
+y_alvo = 2.0
 x_robo = 0
 y_robo = 0
+rota = []
+tmp = 1
 
 
 def timerCallBack(event):
+    global rota, tmp
     kstoc = 0.1
     forca_repulsiva = desvia_obstaculo()
     forca_atrativa = alcanca_alvo()
@@ -37,10 +42,14 @@ def timerCallBack(event):
     if abs(x_robo - x_alvo) <= 0.1 and abs(y_robo-y_alvo) <= 0.1:
         vel.linear.x = 0.0
         vel.angular.z = 0.0
+
+        if tmp:
+            # plot_rota(rota)
+            tmp = 0
     else:
         vel.linear.x = 0.2
         vel.angular.z = velocidade_angular
-
+    
     pub.publish(vel)
 
 def alcanca_alvo():
@@ -79,9 +88,10 @@ def scanCallBack(msg):
     sensores.append(min(msg.ranges[600:]))
 
 def angulo_roboCallBack(msg):
-    global quat, x_robo, y_robo, angulo_robo
+    global quat, x_robo, y_robo, angulo_robo, rota
     x_robo = msg.pose.pose.position.x
     y_robo = msg.pose.pose.position.y
+    rota.append((x_robo, y_robo))
     quaternion = msg.pose.pose.orientation
     quat = [quaternion.x, quaternion.y, quaternion.z, quaternion.w]
     euler = tf.transformations.euler_from_quaternion(quat)
